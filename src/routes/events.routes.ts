@@ -8,4 +8,4 @@ routes.use('/notifications', Controller.createEvent);
 routes.use('/notifications/:id', Controller.deleteEvent);
 
 
-export { routes };
+export default routes;

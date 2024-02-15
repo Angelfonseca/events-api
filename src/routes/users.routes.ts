@@ -6,3 +6,5 @@ const routes = router();
 routes.use('/users', Controller.getUsers);
 routes.use('/users', Controller.createUser);
 routes.use('/users/login', Controller.login);
+
+export default routes;

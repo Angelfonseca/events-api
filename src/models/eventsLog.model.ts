@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import User from './users.model'
 
 // Interfaz para un registro de evento en la base de datos
 interface EventLog extends Document {
@@ -6,6 +7,7 @@ interface EventLog extends Document {
   eventName: string;
   eventDescription: string;
   userId: string;
+  users: User[];
   eventType: string;
   timestamp: Date;
 }
@@ -14,6 +16,7 @@ interface EventLog extends Document {
 interface EmailLog extends Document {
   eventId: string;
   userId: string;
+  users: User[];
   email: string;
   subject: string;
   body: string;
@@ -26,6 +29,7 @@ const eventLogSchema = new Schema({
   eventName: { type: String, required: true },
   eventDescription: { type: String, required: true },
   userId: { type: String, required: true },
+  users: {type: Array, required: true},
   eventType: { type: String, required: true },
   timestamp: { type: Date, default: Date.now }
 });
@@ -34,6 +38,7 @@ const eventLogSchema = new Schema({
 const emailLogSchema = new Schema({
   eventId: { type: String, required: true },
   email: { type: String, required: true },
+  users: {type: Array, required: true},
   subject: { type: String, required: true },
   body: { type: String, required: true },
   timestamp: { type: Date, default: Date.now }

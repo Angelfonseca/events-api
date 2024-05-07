@@ -7,5 +7,6 @@ export interface Event {
         eventDate: Date;
         type: string;
         active: boolean;
+        visualizedby: number;
     }
 

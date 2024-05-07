@@ -3,9 +3,10 @@ import Controller from '../controllers/events.controllers';
 
 const routes = Router();
 
-routes.use('/notifications', Controller.getEvents);
-routes.use('/notifications', Controller.createEvent);
-routes.use('/notifications/:id', Controller.deleteEvent);
+routes.get('/', Controller.getEvents);
+routes.post('/', Controller.createEvent);
+routes.delete('/:id', Controller.deleteEvent);
+routes.get('/active', Controller.getActiveEvents);
 
 
 export default routes;

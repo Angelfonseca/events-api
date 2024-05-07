@@ -8,6 +8,7 @@ const EventSchema = new Schema<Event>({
   eventDate: { type: Date, required: true },
   type: { type: String, enum: ['email', 'mobile'], required: true },
   active: { type: Boolean, required: true},
+  visualizedby: { type: Number, required: true},
 });
 
 

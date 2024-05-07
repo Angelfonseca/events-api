@@ -18,9 +18,18 @@ const createUser = async (req: Request, res: Response) => {
     res.send(user);
   } catch (error) {
     handleHttp(res, 500, "ERROR TO CREATE USERS");
+    return new Error;
   }
 };
 
+const getNoAdminsEmail = async (req: Request, res: Response) => {
+  try {
+    const emails = await usersService.getNoAdminsEmail();
+    res.send(emails);
+  } catch (error) {
+    handleHttp(res, 500, "ERROR TO GET NO ADMINS EMAIL");
+  }
+};
 const login = async (req: Request, res: Response) => {
   try {
     const user = await usersService.login(req.body);
@@ -41,5 +50,6 @@ const login = async (req: Request, res: Response) => {
 export default {
   getUsers,
   createUser,
-  login
+  login,
+  getNoAdminsEmail,
 };

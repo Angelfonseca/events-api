@@ -1,6 +1,7 @@
 import { get } from "http";
 import { User } from "../interfaces/users.interface";
 import UserModel from "../models/users.model";
+import AdminModel from "../models/admin.model";
 import { handleHttp } from "../utils/error.handle";
 
 const getUsers = async () => {
@@ -19,10 +20,27 @@ const getUserById = async (id: string) => {
 
 const getUsersEmail = async (email: string) => {
   const users = await getUsers()
-  const usersEmail = users.map((user: any) => user.email)
-  return usersEmail.includes(email)
+  for (const user of users) {
+    if (user.email === email) {
+      return user.email
+    }
+  }
+  return null
 }
 
+const login = async (credentials: any) => {
+  const user = await UserModel.findOne({ username: credentials.username });
+  if (!user) {
+    const user = await AdminModel.findOne({ username: credentials.username });
+    if (!user)
+    return { error: true, message: 'USER NOT FOUND' }
+  }
+  const matchPassword = await isMatchPassword(user, credentials.password);
+  if (matchPassword) {
+    return { error: false, user }
+  }
+  return { error: true, message: 'INVALID CREDENTIALS' }
+}
 const isMatchPassword = async (user: any, password: string) => {
   return new Promise((resolve, reject) => {
     user.comparePassword(password, function(err: any, isMatch: any) {
@@ -33,11 +51,7 @@ const isMatchPassword = async (user: any, password: string) => {
 }
 
 const getNoAdmins = async (): Promise<User[]> => {
-  try {
-    // Obtener todos los usuarios que no son administradores
     const users = await UserModel.find({ admin: false });
-
-    // Convertir los documentos de Mongoose a objetos User
     const nonAdminUsers: User[] = users.map((user: any) => ({
       _id: user._id.toString(),
       name: user.name,
@@ -46,27 +60,29 @@ const getNoAdmins = async (): Promise<User[]> => {
       password: user.password,
       admin: user.admin
     }));
-
     return nonAdminUsers;
-  } catch (error: any) {
-    throw new Error(`Error al obtener usuarios que no son administradores: ${error.message}`);
-  }
+};
+
+const getNoAdminsEmail = async (): Promise<string[]> => {
+  const users = await getNoAdmins();
+  const emails = users.map((user: any) => user.email);
+  return emails;
 };
 
 const isAdmin = async (id: string): Promise<boolean> => {
   try {
       const user = await getUserById(id);
 
-      if (user && user.admin) {
-          return true;
+      if (user && user.admin === true) {
+          return true; 
       } else {
-          return false;
+          return false; 
       }
   } catch (error: any) {
       console.error(`Error al verificar si el usuario es un administrador: ${error.message}`);
       return false;
+    }
   }
-};
 
 const noAdmin = async (id: string): Promise<boolean> => {
   try {
@@ -83,17 +99,7 @@ const noAdmin = async (id: string): Promise<boolean> => {
   }
 }
 
-const login = async (credentials: any) => {
-  const user = await UserModel.findOne({ username: credentials.username });
-  if (!user) {
-    return { error: true, message: 'USER NOT FOUND' }
-  }
-  const matchPassword = await isMatchPassword(user, credentials.password);
-  if (matchPassword) {
-    return { error: false, user }
-  }
-  return { error: true, message: 'INVALID CREDENTIALS' }
-}
+
 
 export default {
   getUsers,
@@ -103,4 +109,5 @@ export default {
   isAdmin,
   noAdmin,
   getNoAdmins,
+  getNoAdminsEmail,
 };

@@ -7,6 +7,7 @@ const routes = router();
 routes.get('/users', Controller.getUsers);
 routes.post('/users', Controller.createUser);
 routes.post('/users/login', Controller.login);
-routes.get('/users/no-admins', Controller.getNoAdminsEmail);
+routes.post('/users/acept-assistance', Controller.aceptAssistance);
+routes.post('/users/emails', Controller.getEmailsfromUsernames);
 
 export default routes;

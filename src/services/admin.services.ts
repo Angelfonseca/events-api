@@ -1,5 +1,10 @@
+import { register } from "module";
 import { Admin } from "../interfaces/admin.interface";
+import { User } from "../interfaces/users.interface";
 import AdminModel from "../models/admin.model";
+import userModel from "../models/users.model";
+import registerLog from "../models/registerLog.model";
+import EventModel from "../models/events.model";
 
 const getAdmins = async (): Promise<Admin[]> => {
     const admins = await AdminModel.find();
@@ -37,12 +42,60 @@ const getAdminByUsername = async (username: string): Promise<Admin> => {
     return admin;
 };
 
-const isDocente = async (username: string): Promise<boolean> => {
-    const admin = await AdminModel.findOne({ username: username });
-    if (admin) {
+const isDocente = async (id: string): Promise<boolean> => {
+    const admin = await AdminModel.findById(id);
+    if (admin && admin.isdocente === true) {
         return true;
     }
     return false;
+}
+
+const getUserEvents = async (username: string) => {
+    const student = await userModel.findOne({ username: username });
+    if (!student) {
+        throw new Error(`No se encontró el usuario con el nombre de usuario proporcionado.`);
+    }
+
+    try {
+        const studentEvents = await registerLog.find({ UsersAssistance: { $in: [student.username] } });
+        return studentEvents;
+    } catch (error: any) {
+        console.log(`Error al obtener los eventos del usuario: ${error.message}`);
+        throw new Error(`Error al obtener los eventos del usuario: ${error.message}`);
+    }
+}
+const getUserswithcredit = async () => {
+    const students = await userModel.find();
+    if (!students) {
+        throw new Error(`No se encontró ningún usuario.`);
+    }
+    try {
+        for (const student of students) {
+            const studentEvents = await registerLog.find({ UsersAssistance: { $in: [student.username] }, duration: {} });
+            const hours = studentEvents.reduce((acc, curr) => acc + curr.duration, 0);
+            if (hours > 10) {
+                return student;
+            }
+        }
+    } catch (error: any) {
+        console.log(`Error al obtener los eventos del usuario: ${error.message}`);
+        throw new Error(`Error al obtener los eventos del usuario: ${error.message}`);
+    }
+}
+
+const getUserHours = async (id: string) => {
+    const student = await userModel.findById(id);
+    if (!student) {
+        throw new Error(`No se encontró el usuario con el ID proporcionado.`);
+    }
+    try {
+        const studentEvents = await registerLog.find({ UsersAssistance: { $in: [student.username] }, duration: {} });
+        const hours = studentEvents.reduce((acc, curr) => acc + curr.duration, 0);
+        return hours;
+    } catch (error: any) {
+        console.log(`Error al obtener los eventos del usuario: ${error.message}`);
+        throw new Error(`Error al obtener los eventos del usuario: ${error.message}`);
+    }
 }
 
 export default {
@@ -52,6 +105,9 @@ export default {
     createAdmin,
     updateAdmin,
     deleteAdmin,
-    getAdminByUsername
+    getAdminByUsername,
+    getUserEvents,
+    getUserswithcredit,
+    getUserHours
 };
 

@@ -4,6 +4,8 @@ export interface User {
     username: number;
     email: string;
     password: string;
+    career: string;
+    semester: number;
     }
     export interface UserEvent {
         user: User;

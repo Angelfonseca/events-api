@@ -4,6 +4,7 @@ import AdminModel from '../models/admin.model';
 import adminService from '../services/admin.services';
 import adminServices from '../services/admin.services';
 import { handleHttp } from '../utils/error.handle';
+import { get } from 'http';
 
 const getAdmins = async (req: Request, res: Response) => {
     try {
@@ -66,11 +67,44 @@ const getAdminByUsername = async (req: Request, res: Response) => {
     }
 };
 
+const getUserEvents = async (req: Request, res: Response) => {
+    try {
+        const { username } = req.params;
+        const events = await adminServices.getUserEvents(username);
+        res.status(200).json(events);
+    } catch (error: any) {
+        handleHttp(res, 500, "ERROR TO GET USER EVENTS");
+    }
+};
+
+const getUserswithcredit = async (req: Request, res: Response) => {
+    try {
+        const users = await adminServices.getUserswithcredit();
+        res.status(200).json(users);
+    } catch (error: any) {
+        handleHttp(res, 500, "ERROR TO GET USERS WITH CREDIT");
+    }
+};
+
+const getUserHours = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const hours = await adminServices.getUserHours(id);
+        res.status(200).json(hours);
+    } catch (error: any) {
+        handleHttp(res, 500, "ERROR TO GET USER HOURS");
+    }
+};
+
 export default {
     getAdmins,
     createAdmin,
     deleteAdmin,
     getAdminById,
     updateAdmin,
-    getAdminByUsername
+    getAdminByUsername,
+    getUserEvents,
+    getUserHours,
+    getUserswithcredit
+    
 };

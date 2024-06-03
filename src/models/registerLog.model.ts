@@ -1,9 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import event from './events.model'
 
 const registerLogSchema = new Schema({
-    event: { type: event, required: true },
-    UsersAssistance: { type: Array, required: true }
+    event: { type: Schema.Types.ObjectId, ref: 'event' },
+    UsersAssistance: { type: Array, required: true },
+    GuessAssistance: { type: Array, required: true },
+    duration: { type: Number, required: true }
     });
 
 const RegisterLogModel = mongoose.model('RegisterLog', registerLogSchema);
+
+export default RegisterLogModel;

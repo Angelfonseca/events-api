@@ -5,8 +5,9 @@ export interface Event {
         title: string;
         description: string;
         eventDate: Date;
-        type: string;
+        designedfor: string[];
         active: boolean;
         visualizedby: number;
+        aceptedAssistance: string[];
     }
 

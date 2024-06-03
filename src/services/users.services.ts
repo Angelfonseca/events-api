@@ -3,6 +3,7 @@ import { User } from "../interfaces/users.interface";
 import UserModel from "../models/users.model";
 import AdminModel from "../models/admin.model";
 import { handleHttp } from "../utils/error.handle";
+import EventModel from "../models/events.model";
 
 const getUsers = async () => {
   const users = await UserModel.find();
@@ -29,26 +30,36 @@ const getUsersEmail = async (email: string) => {
 }
 
 const login = async (credentials: any) => {
-  const user = await UserModel.findOne({ username: credentials.username });
+  let user = await UserModel.findOne({ username: credentials.username });
+  console.log('Checking UserModel:', user);
+
   if (!user) {
-    const user = await AdminModel.findOne({ username: credentials.username });
-    if (!user)
-    return { error: true, message: 'USER NOT FOUND' }
+      user = await AdminModel.findOne({ username: credentials.username });
+      console.log('Checking AdminModel:', user);
+
+      if (!user) {
+          return { error: true, message: 'USER NOT FOUND' };
+      }
   }
-  const matchPassword = await isMatchPassword(user, credentials.password);
-  if (matchPassword) {
-    return { error: false, user }
+
+  const isPasswordMatch = await isMatchPassword(user, credentials.password);
+  console.log('Password match result:', isPasswordMatch);
+
+  if (!isPasswordMatch) {
+      return { error: true, message: 'INVALID CREDENTIALS' };
   }
-  return { error: true, message: 'INVALID CREDENTIALS' }
-}
+
+  return { error: false, message: 'LOGIN SUCCESSFUL', user };
+};
+
 const isMatchPassword = async (user: any, password: string) => {
   return new Promise((resolve, reject) => {
-    user.comparePassword(password, function(err: any, isMatch: any) {
-      if (err) reject(err);
-      resolve(isMatch)
-    });
-  })
-}
+      user.comparePassword(password, (err: any, isMatch: any) => {
+          if (err) return reject(err);
+          resolve(isMatch);
+      });
+  });
+};
 
 const getNoAdmins = async (): Promise<User[]> => {
     const users = await UserModel.find({ admin: false });
@@ -58,7 +69,9 @@ const getNoAdmins = async (): Promise<User[]> => {
       username: user.username,
       email: user.email,
       password: user.password,
-      admin: user.admin
+      admin: user.admin,
+      career: user.career,
+      semester: user.semester
     }));
     return nonAdminUsers;
 };
@@ -69,45 +82,51 @@ const getNoAdminsEmail = async (): Promise<string[]> => {
   return emails;
 };
 
-const isAdmin = async (id: string): Promise<boolean> => {
-  try {
-      const user = await getUserById(id);
-
-      if (user && user.admin === true) {
-          return true; 
-      } else {
-          return false; 
-      }
-  } catch (error: any) {
-      console.error(`Error al verificar si el usuario es un administrador: ${error.message}`);
-      return false;
-    }
+const aceptAssistance = async (id: string, username: string) => {
+  const event = await EventModel.findById(id);
+  if (!event) {
+      throw new Error(`No se encontró el evento con el ID proporcionado.`);
   }
-
-const noAdmin = async (id: string): Promise<boolean> => {
+  event.aceptedAssistance.push(username);
+  await event.save();
+  return event;
+}
+const getEmailfromUsername = async (username: string): Promise<string> => {
   try {
-      const user = await getUserById(id);
-
-      if (user && user.admin) {
-          return false;
-      } else {
-          return true;
-      }
-  } catch (error: any) {
-      console.error(`Error al verificar si el usuario es un administrador: ${error.message}`);
-      return false;
+    const user = await UserModel.findOne({ username: username });
+    if (!user) {
+      throw new Error(`No se encontró el usuario con el nombre de usuario proporcionado: ${username}`);
+    }
+    return user.email;
+  } catch (error) {
+    console.error(`Error al obtener el email para el username: ${username}`, error);
+    throw error; // Re-lanzar el error para que sea capturado por la función que llama
   }
 }
 
-
-
+const getEmailsfromUsernames = async (usernames: string[]): Promise<string[]> => {
+  try {
+    const emails = await Promise.all(usernames.map(async (username) => {
+      try {
+        return await getEmailfromUsername(username);
+      } catch (error) {
+        console.error(`Error en getEmailfromUsername para el username: ${username}`, error);
+        throw error; // Opcional: puedes decidir cómo manejar errores específicos aquí
+      }
+    }));
+    return emails;
+  } catch (error) {
+    console.error('Error al obtener emails de los usernames', error);
+    throw error; // Re-lanzar el error para que sea manejado en el nivel superior
+  }
+}
 export default {
   getUsers,
   createUser,
   login,
   getUserById,
-  isAdmin,
-  noAdmin,
   getNoAdmins,
   getNoAdminsEmail,
+  aceptAssistance,
+  getEmailsfromUsernames,
 };

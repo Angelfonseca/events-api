@@ -21,10 +21,14 @@ const UserSchema = new Schema({
      type: String,
      required: true
     },
-  admin: {
-     type: Boolean,
-      required: true
-     },
+  career: {
+     type: String,
+     required: true
+    },
+  semester: {
+     type: Number,
+     required: true
+    }
 });
 
 UserSchema.pre('save', function(next) {

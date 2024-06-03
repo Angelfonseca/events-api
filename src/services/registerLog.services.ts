@@ -1,6 +1,6 @@
 
 import { RegisterLog } from "../interfaces/registerLog.interface";
-import rlModel from "../models/users.model";
+import rlModel from "../models/registerLog.model";
 import { handleHttp } from "../utils/error.handle";
 import { User } from "../interfaces/users.interface";
 import { Event } from "../interfaces/events.interface";
@@ -10,19 +10,9 @@ const getRegisterLogs = async () => {
     const registerLogs = await rlModel.find();
     return registerLogs;
     }
-const createRegisterLog = async (registerLog: RegisterLog, event: Event) => {
-    const userId = event.user.toString();
-    const userIsAdmin = await userServices.isAdmin(userId);
-    if (!userIsAdmin) {
-        console.log('El usuario no tiene permisos para añadir asistencias de los eventos.');
-    }
-    try {
-        const registerLogData = await rlModel.create(registerLog);
-        return registerLogData;
-    } catch (error: any) {
-        console.log('Error al crear el registro de asistencia: ', error.message);
-        return new Error;
-    }
+const createRegisterLog = async (registerLog: RegisterLog) => {
+    const newRegisterLog = await rlModel.create(registerLog);
+    return newRegisterLog;
 }
 const getRegisterLog = async (id: string) => {
     const registerLog = await rlModel.findById(id);
@@ -53,10 +43,54 @@ const UsersAssistanceCheck = async (registerLog: RegisterLog, user: String) => {
     }
 }
 
+const addAssistance = async (id: string, username: string) => {
+    const registerLog = await rlModel.findOne({ event: id });
+    if (!registerLog) {
+        throw new Error(`No se encontró el registro de asistencia con el ID proporcionado.`);
+    }
+    registerLog.UsersAssistance.push(username);
+    await registerLog.save();
+    return registerLog;
+}
+
+const addAssistancesandDuration = async (id: string, usernames: string[], duration: number) => {
+    const registerLog = await rlModel.findOne({ event: id });
+    if (!registerLog) {
+        throw new Error(`Evento no encontrado.`);
+    }
+    if (duration <= 0) {
+        throw new Error(`Ingrese un tiempo de duración válido.`);
+    }
+    
+    registerLog.UsersAssistance = registerLog.UsersAssistance.concat(usernames);
+    registerLog.duration = duration; // Asigna el nuevo valor de duración
+    await registerLog.save();
+    
+    return registerLog;
+}
+
+const addGuessAssistance = async (id: string, guess: Array<{ nombre: string; lugar: string }>) => {
+    const registerLog = await rlModel.findOne({ event: id });
+    if (!registerLog) {
+        throw new Error(`Evento no encontrado.`);
+    }
+
+    registerLog.UsersAssistance = registerLog.UsersAssistance.concat(guess);
+    await registerLog.save();
+    return registerLog;
+};
+
+
+
+
 
 export default {
     getRegisterLogs,
     createRegisterLog,
     getRegisterLog,
-    UsersAssistanceCheck
+    UsersAssistanceCheck,
+    addAssistance,
+    addAssistancesandDuration,
+    addGuessAssistance,
+
 }

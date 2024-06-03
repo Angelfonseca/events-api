@@ -16,13 +16,8 @@ const getRegisterLogs = async (req: Request, res: Response) => {
 
 const createRegisterLog = async (req: Request, res: Response) => {
     try {
-        const registerLog: RegisterLog = req.body;
-        const assistance = registerLog.UsersAssistance;
-        if (assistance.length === 0) {
-            console.log("The assistance list is empty");
-        }
-        const event: Event = req.body.event;
-        const newRegisterLog = await rlService.createRegisterLog(registerLog, event);
+        const registerLog = req.body;
+        const newRegisterLog = await rlService.createRegisterLog(registerLog);
         res.status(201).json(newRegisterLog);
     } catch (error: any) {  
         handleHttp(res, 500, "Error creating register log");
@@ -39,8 +34,56 @@ const getRegisterLog = async (req: Request, res: Response) => {
     }
 }
 
+const addAssistance = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const username = req.body.username;
+        await rlService.addAssistance(id, username);
+        res.status(204).end();
+    } catch (error: any) {
+        handleHttp(res, 500, "Error adding assistance");
+    }
+}
+const addAssistances = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const usernames = req.body.usernames;
+        const duration = req.body.duration;
+        await rlService.addAssistancesandDuration(id, usernames, duration);
+        res.status(204).end();
+    } catch (error: any) {
+        handleHttp(res, 500, "Error adding assistances");
+    }
+} 
+const addGuessAssistance = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const guess = req.body.guess; // Esperar que guess sea un array
+
+        if (!Array.isArray(guess)) {
+            return res.status(400).json({ message: "El campo 'guess' debe ser un array." });
+        }
+
+        if (guess.length === 0) {
+            return res.status(400).json({ message: "El campo 'guess' no debe estar vacío." });
+        }
+
+        await rlService.addGuessAssistance(id, guess);
+        res.status(204).end();
+    } catch (error: any) {
+        handleHttp(res, 500, "Error adding guess assistance");
+        console.log('Error adding guess assistance: ', error);
+    }
+};
+
+
+
+
 export default {
     getRegisterLogs,
     createRegisterLog,
-    getRegisterLog
+    getRegisterLog,
+    addAssistance,
+    addAssistances,
+    addGuessAssistance
 };
